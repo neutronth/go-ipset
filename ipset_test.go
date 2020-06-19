@@ -22,31 +22,31 @@ func TestListSets(t *testing.T) {
 		{
 			name: "1 set",
 			output: []byte(`
-      <ipsets>
-        <ipset name="foo"/>
-      </ipsets>
-      `),
+			<ipsets>
+				<ipset name="foo"/>
+			</ipsets>
+			`),
 			expected: []string{"foo"},
 		},
 		{
 			name: "2 sets",
 			output: []byte(`
-      <ipsets>
-        <ipset name="foo"/>
-        <ipset name="bar"/>
-      </ipsets>
-      `),
+			<ipsets>
+				<ipset name="foo"/>
+				<ipset name="bar"/>
+			</ipsets>
+			`),
 			expected: []string{"foo", "bar"},
 		},
 		{
 			name: "3 sets",
 			output: []byte(`
-      <ipsets>
-        <ipset name="foo"/>
-        <ipset name="bar"/>
-        <ipset name="baz"/>
-      </ipsets>
-      `),
+			<ipsets>
+				<ipset name="foo"/>
+				<ipset name="bar"/>
+				<ipset name="baz"/>
+			</ipsets>
+			`),
 			expected: []string{"foo", "bar", "baz"},
 		},
 		{
@@ -108,28 +108,28 @@ func TestListEntries(t *testing.T) {
 			name:    "foo set",
 			setname: "foo",
 			output: []byte(`
-      <ipsets>
-        <ipset name="foo">
-          <type>hash:ip</type>
-          <revision>4</revision>
-          <header>
-            <family>inet</family>
-            <hashsize>1024</hashsize>
-            <maxelem>65536</maxelem>
-            <comment/>
-            <memsize>334</memsize>
-            <references>0</references>
-            <numentries>0</numentries>
-          </header>
-          <members>
-            <member>
-              <elem>172.18.3.2</elem>
-              <comment>"ContainerID: deadbeaf"</comment>
-            </member>
-          </members>
-        </ipset>
-      </ipsets>
-      `),
+			<ipsets>
+				<ipset name="foo">
+					<type>hash:ip</type>
+					<revision>4</revision>
+					<header>
+						<family>inet</family>
+						<hashsize>1024</hashsize>
+						<maxelem>65536</maxelem>
+						<comment/>
+						<memsize>334</memsize>
+						<references>0</references>
+						<numentries>0</numentries>
+					</header>
+					<members>
+						<member>
+							<elem>172.18.3.2</elem>
+							<comment>"ContainerID: deadbeaf"</comment>
+						</member>
+					</members>
+				</ipset>
+			</ipsets>
+			`),
 			expected: []IPSetEntry{
 				{Element: "172.18.3.2", Comment: "\"ContainerID: deadbeaf\""},
 			},
@@ -138,32 +138,32 @@ func TestListEntries(t *testing.T) {
 			name:    "foo set, 2 entries",
 			setname: "foo",
 			output: []byte(`
-      <ipsets>
-        <ipset name="foo">
-          <type>hash:ip</type>
-          <revision>4</revision>
-          <header>
-            <family>inet</family>
-            <hashsize>1024</hashsize>
-            <maxelem>65536</maxelem>
-            <comment/>
-            <memsize>472</memsize>
-            <references>0</references>
-            <numentries>0</numentries>
-          </header>
-          <members>
-            <member>
-              <elem>172.18.3.3</elem>
-              <comment>"ContainerID: deadbeafbeaf"</comment>
-            </member>
-            <member>
-              <elem>172.18.3.2</elem>
-              <comment>"ContainerID: deadbeaf"</comment>
-            </member>
-          </members>
-        </ipset>
-      </ipsets>
-      `),
+			<ipsets>
+				<ipset name="foo">
+					<type>hash:ip</type>
+					<revision>4</revision>
+					<header>
+						<family>inet</family>
+						<hashsize>1024</hashsize>
+						<maxelem>65536</maxelem>
+						<comment/>
+						<memsize>472</memsize>
+						<references>0</references>
+						<numentries>0</numentries>
+					</header>
+					<members>
+						<member>
+							<elem>172.18.3.3</elem>
+							<comment>"ContainerID: deadbeafbeaf"</comment>
+						</member>
+						<member>
+							<elem>172.18.3.2</elem>
+							<comment>"ContainerID: deadbeaf"</comment>
+						</member>
+					</members>
+				</ipset>
+			</ipsets>
+			`),
 			expected: []IPSetEntry{
 				{Element: "172.18.3.3", Comment: "\"ContainerID: deadbeafbeaf\""},
 				{Element: "172.18.3.2", Comment: "\"ContainerID: deadbeaf\""},
@@ -173,24 +173,24 @@ func TestListEntries(t *testing.T) {
 			name:    "foo set empty",
 			setname: "foo",
 			output: []byte(`
-      <ipsets>
-        <ipset name="foo">
-          <type>hash:ip</type>
-          <revision>4</revision>
-          <header>
-            <family>inet</family>
-            <hashsize>1024</hashsize>
-            <maxelem>65536</maxelem>
-            <comment/>
-            <memsize>200</memsize>
-            <references>0</references>
-            <numentries>0</numentries>
-          </header>
-          <members>
-          </members>
-        </ipset>
-      </ipsets>
-      `),
+			<ipsets>
+				<ipset name="foo">
+					<type>hash:ip</type>
+					<revision>4</revision>
+					<header>
+						<family>inet</family>
+						<hashsize>1024</hashsize>
+						<maxelem>65536</maxelem>
+						<comment/>
+						<memsize>200</memsize>
+						<references>0</references>
+						<numentries>0</numentries>
+					</header>
+					<members>
+					</members>
+				</ipset>
+			</ipsets>
+			`),
 			expected: []IPSetEntry{},
 		},
 	}
