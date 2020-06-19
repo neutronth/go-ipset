@@ -12,9 +12,16 @@ import (
 	utilexec "k8s.io/utils/exec"
 )
 
+// IPSetEntry defines the XML data structure of each entry.
+type IPSetEntry struct {
+	Element string `xml:"elem"`
+	Comment string `xml:"comment"`
+}
+
 // IPSetSet defines the XML data structure of each set.
 type IPSetSet struct {
-	Name string `xml:"name,attr"`
+	Name    string       `xml:"name,attr"`
+	Entries []IPSetEntry `xml:"members>member"`
 }
 
 // IPSetSets defines the XML data structure of sets.
@@ -26,6 +33,7 @@ type IPSetSets struct {
 // Implementations must be goroutine-safe.
 type Interface interface {
 	ListSets() ([]string, error)
+	ListEntries(setname string) ([]IPSetEntry, error)
 }
 
 // IPSetCmd represents the ipset util. We use ipset command for
@@ -75,4 +83,32 @@ func (runner *runner) ListSets() ([]string, error) {
 	}
 
 	return list, nil
+}
+
+// ListSets list all set names from kernel.
+func (runner *runner) ListEntries(setname string) ([]IPSetEntry, error) {
+	cmdArgs := cmdArgsBuilder([]string{"list", setname})
+	out, err := runner.exec.
+		Command(IPSetCmd, cmdArgs...).
+		CombinedOutput()
+
+	if err != nil {
+		return nil, fmt.Errorf("error listing all sets, error: %v", err)
+	}
+
+	var sets IPSetSets
+	err = xml.Unmarshal([]byte(out), &sets)
+
+	if err != nil {
+		return nil, fmt.Errorf("error extract data sets, error: %v", err)
+	}
+
+	entries := []IPSetEntry{}
+	for _, set := range sets.List {
+		if set.Entries != nil {
+			entries = set.Entries
+		}
+	}
+
+	return entries, nil
 }
