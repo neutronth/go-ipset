@@ -6,6 +6,7 @@
 package ipset
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -13,6 +14,183 @@ import (
 	"k8s.io/utils/exec"
 	fakeexec "k8s.io/utils/exec/testing"
 )
+
+func TestIPSetSpec(t *testing.T) {
+	cases := []struct {
+		name          string
+		set           *IPSet
+		expectedError error
+	}{
+		{
+			name: "Set with default specification",
+			set: IPSetSpec(
+				IPSetName("foo"),
+			),
+			expectedError: nil,
+		},
+		{
+			name: "Set with type specification",
+			set: IPSetSpec(
+				IPSetName("foo"),
+				IPSetType(HashIP),
+			),
+			expectedError: nil,
+		},
+		{
+			name: "Set with type, hashsize, max elements specification",
+			set: IPSetSpec(
+				IPSetName("foo"),
+				IPSetType(HashIP),
+				IPSetHashSize(256),
+				IPSetMaxElement(128),
+			),
+			expectedError: nil,
+		},
+		{
+			name: "Set with invalid type specification",
+			set: IPSetSpec(
+				IPSetName("foo"),
+				IPSetType("invalid"),
+			),
+			expectedError: fmt.Errorf("invalid Set Type"),
+		},
+		{
+			name: "Set with invalid hash size specification",
+			set: IPSetSpec(
+				IPSetName("foo"),
+				IPSetType(HashIP),
+				IPSetHashSize(-1),
+			),
+			expectedError: fmt.Errorf("invalid Hash Size value -1, should be >0"),
+		},
+		{
+			name: "Set with invalid max elements specification",
+			set: IPSetSpec(
+				IPSetName("foo"),
+				IPSetType(HashIP),
+				IPSetHashSize(1024),
+				IPSetMaxElement(0),
+			),
+			expectedError: fmt.Errorf("invalid Max Element value 0, should be >0"),
+		},
+	}
+
+	for _, c := range cases {
+		err := c.set.Validate()
+		if err != c.expectedError && err.Error() != c.expectedError.Error() {
+			t.Errorf("expected error: %v, got: %v", c.expectedError, err)
+		}
+	}
+}
+
+func TestCreateSet(t *testing.T) {
+	cases := []struct {
+		name              string
+		set               *IPSet
+		combinedOutputLog [][]string
+	}{
+		{
+			name: "Create set foo hash:ip with default specification",
+			set: IPSetSpec(
+				IPSetName("foo"),
+				IPSetType(HashIP),
+			),
+			combinedOutputLog: [][]string{
+				{"ipset", "create", "foo", string(HashIP), "family", "inet",
+					"hashsize", "1024", "maxelem", "65536",
+					"-o", "xml"},
+				{"ipset", "create", "foo", string(HashIP), "family", "inet",
+					"hashsize", "1024", "maxelem", "65536",
+					"-exist", "-o", "xml"},
+			},
+		},
+		{
+			name: "Create set foo hash:ip with custom specification",
+			set: IPSetSpec(
+				IPSetName("foo"),
+				IPSetType(HashIP),
+				IPSetHashSize(256),
+				IPSetMaxElement(128),
+			),
+			combinedOutputLog: [][]string{
+				{"ipset", "create", "foo", string(HashIP), "family", "inet",
+					"hashsize", "256", "maxelem", "128",
+					"-o", "xml"},
+				{"ipset", "create", "foo", string(HashIP), "family", "inet",
+					"hashsize", "256", "maxelem", "128",
+					"-exist", "-o", "xml"},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		fcmd := fakeexec.FakeCmd{
+			CombinedOutputScript: []fakeexec.FakeAction{
+				// Success
+				func() ([]byte, []byte, error) { return []byte{}, nil, nil },
+				// Success
+				func() ([]byte, []byte, error) { return []byte{}, nil, nil },
+				// Failure
+				func() ([]byte, []byte, error) {
+					return []byte("ipset v7.6: Set cannot be created: set with the same name already exists"), nil, &fakeexec.FakeExitError{Status: 1}
+				},
+			},
+		}
+
+		fexec := fakeexec.FakeExec{
+			CommandScript: []fakeexec.FakeCommandAction{
+				func(cmd string, args ...string) exec.Cmd {
+					return fakeexec.InitFakeCmd(&fcmd, cmd, args...)
+				},
+				func(cmd string, args ...string) exec.Cmd {
+					return fakeexec.InitFakeCmd(&fcmd, cmd, args...)
+				},
+				func(cmd string, args ...string) exec.Cmd {
+					return fakeexec.InitFakeCmd(&fcmd, cmd, args...)
+				},
+			},
+		}
+
+		runner := New(&fexec)
+
+		err := runner.CreateSet(c.set, false)
+		if err != nil {
+			t.Errorf("[%s] expected success, got: %v", c.name, err)
+		}
+
+		if fcmd.CombinedOutputCalls != 1 {
+			t.Errorf("[%s] expected 1 CombinedOutput() calls, got: %d",
+				c.name, fcmd.CombinedOutputCalls)
+		}
+
+		if !sets.NewString(fcmd.CombinedOutputLog[0]...).
+			HasAll(c.combinedOutputLog[0]...) {
+			t.Errorf("wrong CombinedOutput() log, got: %s",
+				fcmd.CombinedOutputLog[0])
+		}
+
+		err = runner.CreateSet(c.set, true)
+		if err != nil {
+			t.Errorf("[%s] expected success, got: %v", c.name, err)
+		}
+
+		if fcmd.CombinedOutputCalls != 2 {
+			t.Errorf("[%s] expected 2 CombinedOutput() calls, got: %d",
+				c.name, fcmd.CombinedOutputCalls)
+		}
+
+		if !sets.NewString(fcmd.CombinedOutputLog[1]...).
+			HasAll(c.combinedOutputLog[1]...) {
+			t.Errorf("wrong CombinedOutput() log, got: %s",
+				fcmd.CombinedOutputLog[1])
+		}
+
+		err = runner.CreateSet(c.set, false)
+		if err == nil {
+			t.Errorf("[%s] expected failure, got: nil", c.name)
+		}
+	}
+}
 
 func TestListSets(t *testing.T) {
 	cases := []struct {
