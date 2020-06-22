@@ -18,15 +18,15 @@ type IPSetEntry struct {
 	Comment string `xml:"comment"`
 }
 
-// IPSetSet defines the XML data structure of each set.
-type IPSetSet struct {
+// IPSet defines the XML data structure of each set.
+type IPSet struct {
 	Name    string       `xml:"name,attr"`
 	Entries []IPSetEntry `xml:"members>member"`
 }
 
-// IPSetSets defines the XML data structure of sets.
-type IPSetSets struct {
-	List []IPSetSet `xml:"ipset"`
+// IPSets defines the XML data structure of sets.
+type IPSets struct {
+	List []IPSet `xml:"ipset"`
 }
 
 // Interface is an injectable interface for running ipset commands.
@@ -72,7 +72,7 @@ func (runner *runner) ListSets() ([]string, error) {
 		return nil, fmt.Errorf("error listing all sets, error: %v", err)
 	}
 
-	var sets IPSetSets
+	var sets IPSets
 	err = xml.Unmarshal([]byte(out), &sets)
 
 	if err != nil {
@@ -98,7 +98,7 @@ func (runner *runner) ListEntries(setname string) ([]IPSetEntry, error) {
 		return nil, fmt.Errorf("error listing all sets, error: %v", err)
 	}
 
-	var sets IPSetSets
+	var sets IPSets
 	err = xml.Unmarshal([]byte(out), &sets)
 
 	if err != nil {
