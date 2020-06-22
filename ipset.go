@@ -34,6 +34,7 @@ type IPSetSets struct {
 type Interface interface {
 	ListSets() ([]string, error)
 	ListEntries(setname string) ([]IPSetEntry, error)
+	AddEntry(entry *IPSetEntry, setname string, ignoreExistErr bool) error
 }
 
 // IPSetCmd represents the ipset util. We use ipset command for
@@ -111,4 +112,30 @@ func (runner *runner) ListEntries(setname string) ([]IPSetEntry, error) {
 	}
 
 	return entries, nil
+}
+
+// AddEntry adds an entry to the specified set name.
+func (runner *runner) AddEntry(entry *IPSetEntry, setname string,
+	ignoreExistErr bool) error {
+	cmdArgs := []string{"add", setname, entry.Element}
+
+	if len(entry.Comment) > 0 {
+		cmdArgs = append(cmdArgs, "comment", entry.Comment)
+	}
+
+	if ignoreExistErr {
+		cmdArgs = append(cmdArgs, "-exist")
+	}
+
+	cmdArgs = cmdArgsBuilder(cmdArgs)
+
+	_, err := runner.exec.
+		Command(IPSetCmd, cmdArgs...).
+		CombinedOutput()
+
+	if err != nil {
+		return fmt.Errorf("error adding entry %+v, error: %v", entry, err)
+	}
+
+	return nil
 }
