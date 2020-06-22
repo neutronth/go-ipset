@@ -84,6 +84,7 @@ type IPSets struct {
 // Implementations must be goroutine-safe.
 type Interface interface {
 	CreateSet(set *IPSet, ignoreExistErr bool) error
+	DestroySet(setname string) error
 	ListSets() ([]string, error)
 	ListEntries(setname string) ([]IPSetEntry, error)
 	AddEntry(entry *IPSetEntry, setname string, ignoreExistErr bool) error
@@ -146,6 +147,20 @@ func (runner *runner) createSet(set *IPSet, ignoreExistErr bool) error {
 
 	if err != nil {
 		return fmt.Errorf("error creating set: %v, error: %v", set, err)
+	}
+
+	return nil
+}
+
+// DestroySet destroys the specified set name.
+func (runner *runner) DestroySet(setname string) error {
+	cmdArgs := cmdArgsBuilder([]string{"destroy", setname})
+	_, err := runner.exec.
+		Command(IPSetCmd, cmdArgs...).
+		CombinedOutput()
+
+	if err != nil {
+		return fmt.Errorf("error destroying set %s, error: %v", setname, err)
 	}
 
 	return nil

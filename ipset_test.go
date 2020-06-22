@@ -192,6 +192,80 @@ func TestCreateSet(t *testing.T) {
 	}
 }
 
+func TestDestroySet(t *testing.T) {
+	cases := []struct {
+		name              string
+		setname           string
+		combinedOutputLog [][]string
+	}{
+		{
+			name:    "Destroy foo set",
+			setname: "foo",
+			combinedOutputLog: [][]string{
+				{"ipset", "destroy", "foo", "-o", "xml"},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		fcmd := fakeexec.FakeCmd{
+			CombinedOutputScript: []fakeexec.FakeAction{
+				// Success
+				func() ([]byte, []byte, error) { return []byte{}, nil, nil },
+				// Failure
+				func() ([]byte, []byte, error) {
+					return []byte("ipset v7.6: The set with the given name does not exist"), nil, &fakeexec.FakeExitError{Status: 1}
+				},
+			},
+		}
+
+		fexec := fakeexec.FakeExec{
+			CommandScript: []fakeexec.FakeCommandAction{
+				func(cmd string, args ...string) exec.Cmd {
+					return fakeexec.InitFakeCmd(&fcmd, cmd, args...)
+				},
+				func(cmd string, args ...string) exec.Cmd {
+					return fakeexec.InitFakeCmd(&fcmd, cmd, args...)
+				},
+			},
+		}
+
+		runner := New(&fexec)
+
+		err := runner.DestroySet(c.setname)
+		if err != nil {
+			t.Errorf("[%s] expected success, got: %v", c.name, err)
+		}
+
+		if fcmd.CombinedOutputCalls != 1 {
+			t.Errorf("[%s] expected 1 CombinedOutput() calls, got: %d",
+				c.name, fcmd.CombinedOutputCalls)
+		}
+
+		if !sets.NewString(fcmd.CombinedOutputLog[0]...).
+			HasAll(c.combinedOutputLog[0]...) {
+			t.Errorf("wrong CombinedOutput() log, got: %s",
+				fcmd.CombinedOutputLog[0])
+		}
+
+		err = runner.DestroySet(c.setname)
+		if err == nil {
+			t.Errorf("[%s] expected failure, got: nil", c.name)
+		}
+
+		if fcmd.CombinedOutputCalls != 2 {
+			t.Errorf("[%s] expected 2 CombinedOutput() calls, got: %d",
+				c.name, fcmd.CombinedOutputCalls)
+		}
+
+		if !sets.NewString(fcmd.CombinedOutputLog[0]...).
+			HasAll(c.combinedOutputLog[0]...) {
+			t.Errorf("wrong CombinedOutput() log, got: %s",
+				fcmd.CombinedOutputLog[0])
+		}
+	}
+}
+
 func TestListSets(t *testing.T) {
 	cases := []struct {
 		name     string
