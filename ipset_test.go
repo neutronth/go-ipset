@@ -331,7 +331,7 @@ func TestAddEntry(t *testing.T) {
 		if !sets.NewString(fcmd.CombinedOutputLog[1]...).
 			HasAll(c.combinedOutputLog[1]...) {
 			t.Errorf("wrong CombinedOutput() log, got: %s",
-				fcmd.CombinedOutputLog[0])
+				fcmd.CombinedOutputLog[1])
 		}
 
 		err = runner.AddEntry(&c.entry, c.setname, false)
