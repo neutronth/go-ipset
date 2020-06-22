@@ -340,3 +340,79 @@ func TestAddEntry(t *testing.T) {
 		}
 	}
 }
+
+func TestDelEntry(t *testing.T) {
+	cases := []struct {
+		name              string
+		setname           string
+		entryElement      string
+		combinedOutputLog [][]string
+	}{
+		{
+			name:         "Delete entry",
+			setname:      "foo",
+			entryElement: "172.18.3.2",
+			combinedOutputLog: [][]string{
+				{"ipset", "del", "foo", "172.18.3.2", "-o", "xml"},
+			},
+		},
+	}
+
+	for _, c := range cases {
+		fcmd := fakeexec.FakeCmd{
+			CombinedOutputScript: []fakeexec.FakeAction{
+				// Success
+				func() ([]byte, []byte, error) { return []byte{}, nil, nil },
+				// Failure
+				func() ([]byte, []byte, error) {
+					return []byte("ipset v7.6: Element cannot be deleted from the set: it's not added"), nil, &fakeexec.FakeExitError{Status: 1}
+				},
+			},
+		}
+
+		fexec := fakeexec.FakeExec{
+			CommandScript: []fakeexec.FakeCommandAction{
+				func(cmd string, args ...string) exec.Cmd {
+					return fakeexec.InitFakeCmd(&fcmd, cmd, args...)
+				},
+				func(cmd string, args ...string) exec.Cmd {
+					return fakeexec.InitFakeCmd(&fcmd, cmd, args...)
+				},
+			},
+		}
+
+		runner := New(&fexec)
+
+		err := runner.DelEntry(c.entryElement, c.setname)
+		if err != nil {
+			t.Errorf("[%s] expected success, got: %v", c.name, err)
+		}
+
+		if fcmd.CombinedOutputCalls != 1 {
+			t.Errorf("[%s] expected 1 CombinedOutput() calls, got: %d",
+				c.name, fcmd.CombinedOutputCalls)
+		}
+
+		if !sets.NewString(fcmd.CombinedOutputLog[0]...).
+			HasAll(c.combinedOutputLog[0]...) {
+			t.Errorf("wrong CombinedOutput() log, got: %s",
+				fcmd.CombinedOutputLog[0])
+		}
+
+		err = runner.DelEntry(c.entryElement, c.setname)
+		if err == nil {
+			t.Errorf("[%s] expected failure, got: nil", c.name)
+		}
+
+		if fcmd.CombinedOutputCalls != 2 {
+			t.Errorf("[%s] expected 2 CombinedOutput() calls, got: %d",
+				c.name, fcmd.CombinedOutputCalls)
+		}
+
+		if !sets.NewString(fcmd.CombinedOutputLog[0]...).
+			HasAll(c.combinedOutputLog[0]...) {
+			t.Errorf("wrong CombinedOutput() log, got: %s",
+				fcmd.CombinedOutputLog[0])
+		}
+	}
+}

@@ -35,6 +35,7 @@ type Interface interface {
 	ListSets() ([]string, error)
 	ListEntries(setname string) ([]IPSetEntry, error)
 	AddEntry(entry *IPSetEntry, setname string, ignoreExistErr bool) error
+	DelEntry(entryElement string, setname string) error
 }
 
 // IPSetCmd represents the ipset util. We use ipset command for
@@ -135,6 +136,21 @@ func (runner *runner) AddEntry(entry *IPSetEntry, setname string,
 
 	if err != nil {
 		return fmt.Errorf("error adding entry %+v, error: %v", entry, err)
+	}
+
+	return nil
+}
+
+// DelEntry deletes an entry from the specified set name.
+func (runner *runner) DelEntry(entryElement string, setname string) error {
+	cmdArgs := cmdArgsBuilder([]string{"del", setname, entryElement})
+	_, err := runner.exec.
+		Command(IPSetCmd, cmdArgs...).
+		CombinedOutput()
+
+	if err != nil {
+		return fmt.Errorf("error deleting entry %s, error: %v",
+			entryElement, err)
 	}
 
 	return nil
