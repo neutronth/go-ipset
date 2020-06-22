@@ -237,7 +237,6 @@ func TestAddEntry(t *testing.T) {
 		name              string
 		setname           string
 		entry             IPSetEntry
-		expectedError     error
 		combinedOutputLog [][]string
 	}{
 		{
