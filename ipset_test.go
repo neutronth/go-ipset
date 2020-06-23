@@ -402,7 +402,7 @@ func TestListEntries(t *testing.T) {
 			</ipsets>
 			`),
 			expected: []IPSetEntry{
-				{Element: "172.18.3.2", Comment: "\"ContainerID: deadbeaf\""},
+				{Element: "172.18.3.2", Comment: "ContainerID: deadbeaf"},
 			},
 		},
 		{
@@ -436,8 +436,8 @@ func TestListEntries(t *testing.T) {
 			</ipsets>
 			`),
 			expected: []IPSetEntry{
-				{Element: "172.18.3.3", Comment: "\"ContainerID: deadbeafbeaf\""},
-				{Element: "172.18.3.2", Comment: "\"ContainerID: deadbeaf\""},
+				{Element: "172.18.3.3", Comment: "ContainerID: deadbeafbeaf"},
+				{Element: "172.18.3.2", Comment: "ContainerID: deadbeaf"},
 			},
 		},
 		{
@@ -514,17 +514,17 @@ func TestAddEntry(t *testing.T) {
 			setname: "foo",
 			entry: IPSetEntry{
 				Element: "172.18.3.2",
-				Comment: "\"ContainerID: deadbeaf\"",
+				Comment: "ContainerID: deadbeaf",
 			},
 			combinedOutputLog: [][]string{
 				{
 					"ipset", "add", "foo", "172.18.3.2",
-					"comment", "\"ContainerID: deadbeaf\"",
+					"comment", "ContainerID: deadbeaf",
 					"-o", "xml",
 				},
 				{
 					"ipset", "add", "foo", "172.18.3.2",
-					"comment", "\"ContainerID: deadbeaf\"", "-exist",
+					"comment", "ContainerID: deadbeaf", "-exist",
 					"-o", "xml",
 				},
 			},

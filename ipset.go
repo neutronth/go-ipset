@@ -8,6 +8,7 @@ package ipset
 import (
 	"encoding/xml"
 	"fmt"
+	"regexp"
 	"strconv"
 
 	utilexec "k8s.io/utils/exec"
@@ -17,6 +18,13 @@ import (
 type IPSetEntry struct {
 	Element string `xml:"elem"`
 	Comment string `xml:"comment"`
+}
+
+var removeOuterQuotes = regexp.MustCompile(`^"(.*)"$`)
+
+// format does the entry data formatting
+func (entry *IPSetEntry) format() {
+	entry.Comment = removeOuterQuotes.ReplaceAllString(entry.Comment, `$1`)
 }
 
 // IPSet defines the XML data structure of each set.
@@ -218,6 +226,10 @@ func (runner *runner) ListEntries(setname string) ([]IPSetEntry, error) {
 	entries := []IPSetEntry{}
 	for _, set := range sets.List {
 		if set.Entries != nil {
+			for idx := range set.Entries {
+				set.Entries[idx].format()
+			}
+
 			entries = set.Entries
 		}
 	}
