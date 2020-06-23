@@ -121,6 +121,24 @@ func TestCreateSet(t *testing.T) {
 					"-exist", "-o", "xml"},
 			},
 		},
+		{
+			name: "Create set foo hash:ip with comment option",
+			set: IPSetSpec(
+				IPSetName("foo"),
+				IPSetType(HashIP),
+				IPSetHashSize(256),
+				IPSetMaxElement(128),
+				IPSetWithComment(),
+			),
+			combinedOutputLog: [][]string{
+				{"ipset", "create", "foo", string(HashIP), "family", "inet",
+					"hashsize", "256", "maxelem", "128", "comment",
+					"-o", "xml"},
+				{"ipset", "create", "foo", string(HashIP), "family", "inet",
+					"hashsize", "256", "maxelem", "128", "comment",
+					"-exist", "-o", "xml"},
+			},
+		},
 	}
 
 	for _, c := range cases {

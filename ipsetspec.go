@@ -41,14 +41,22 @@ func IPSetMaxElement(max int) IPSetSpecFunc {
 	}
 }
 
+// IPSetWithComment enable the set creation with comment option.
+func IPSetWithComment() IPSetSpecFunc {
+	return func(set *IPSet) {
+		set.WithComment = true
+	}
+}
+
 // IPSetSpec provides the interface to setup the set specification with
 // default values
 func IPSetSpec(setters ...IPSetSpecFunc) *IPSet {
 	set := &IPSet{
-		SetType:    HashIP,
-		HashFamily: ProtocolFamilyIPv4,
-		HashSize:   1024,
-		MaxElement: 65536,
+		SetType:     HashIP,
+		HashFamily:  ProtocolFamilyIPv4,
+		HashSize:    1024,
+		MaxElement:  65536,
+		WithComment: false,
 	}
 
 	for _, setter := range setters {

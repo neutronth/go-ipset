@@ -21,12 +21,13 @@ type IPSetEntry struct {
 
 // IPSet defines the XML data structure of each set.
 type IPSet struct {
-	Name       string       `xml:"name,attr"`
-	SetType    Type         `xml:"type"`
-	HashFamily string       `xml:"header>family"`
-	HashSize   int          `xml:"header>hashsize"`
-	MaxElement int          `xml:"header>maxelem"`
-	Entries    []IPSetEntry `xml:"members>member"`
+	Name        string       `xml:"name,attr"`
+	SetType     Type         `xml:"type"`
+	HashFamily  string       `xml:"header>family"`
+	HashSize    int          `xml:"header>hashsize"`
+	MaxElement  int          `xml:"header>maxelem"`
+	WithComment bool         `xml:"header>comment"`
+	Entries     []IPSetEntry `xml:"members>member"`
 }
 
 // Validate checks if a given ipset is valid or not.
@@ -134,6 +135,10 @@ func (runner *runner) createSet(set *IPSet, ignoreExistErr bool) error {
 			"hashsize", strconv.Itoa(set.HashSize),
 			"maxelem", strconv.Itoa(set.MaxElement),
 		)
+	}
+
+	if set.WithComment {
+		cmdArgs = append(cmdArgs, "comment")
 	}
 
 	if ignoreExistErr {
