@@ -15,6 +15,8 @@ import (
 	fakeexec "k8s.io/utils/exec/testing"
 )
 
+const testIPSetLockfilePath = "ipset.lock"
+
 func TestIPSetSpec(t *testing.T) {
 	cases := []struct {
 		name          string
@@ -169,7 +171,7 @@ func TestCreateSet(t *testing.T) {
 			},
 		}
 
-		runner := New(&fexec)
+		runner := newInternal(&fexec, testIPSetLockfilePath)
 
 		err := runner.CreateSet(c.set, false)
 		if err != nil {
@@ -248,7 +250,7 @@ func TestDestroySet(t *testing.T) {
 			},
 		}
 
-		runner := New(&fexec)
+		runner := newInternal(&fexec, testIPSetLockfilePath)
 
 		err := runner.DestroySet(c.setname)
 		if err != nil {
@@ -345,7 +347,7 @@ func TestListSets(t *testing.T) {
 			},
 		}
 
-		runner := New(&fexec)
+		runner := newInternal(&fexec, testIPSetLockfilePath)
 
 		list, err := runner.ListSets()
 		if err != nil {
@@ -484,7 +486,7 @@ func TestListEntries(t *testing.T) {
 			},
 		}
 
-		runner := New(&fexec)
+		runner := newInternal(&fexec, testIPSetLockfilePath)
 
 		list, err := runner.ListEntries(c.setname)
 		if err != nil {
@@ -570,7 +572,7 @@ func TestAddEntry(t *testing.T) {
 			},
 		}
 
-		runner := New(&fexec)
+		runner := newInternal(&fexec, testIPSetLockfilePath)
 
 		err := runner.AddEntry(&c.entry, c.setname, false)
 		if err != nil {
@@ -651,7 +653,7 @@ func TestDelEntry(t *testing.T) {
 			},
 		}
 
-		runner := New(&fexec)
+		runner := newInternal(&fexec, testIPSetLockfilePath)
 
 		err := runner.DelEntry(c.entryElement, c.setname)
 		if err != nil {

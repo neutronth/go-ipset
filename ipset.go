@@ -107,15 +107,35 @@ const IPSetCmd = "ipset"
 // IPSetCmdMandatoryArgs represents the mandatory ipset command arguments.
 var IPSetCmdMandatoryArgs = []string{"-o", "xml"}
 
+// IPSetLockfilePath represents the ipset lockfile path
+const IPSetLockfilePath = "/run/ipset.lock"
+
+type ipsetLocker interface {
+	Lock() error
+	Unlock()
+}
+
 type runner struct {
-	exec utilexec.Interface
+	exec   utilexec.Interface
+	locker ipsetLocker
+}
+
+// newInternal returns a new Interface which will exec ipset and allows the caller
+// to change the ipset lockfile path.
+func newInternal(exec utilexec.Interface, lockfilePath string) Interface {
+	locker := &locker{
+		lockfilePath: lockfilePath,
+	}
+
+	return &runner{
+		exec:   exec,
+		locker: locker,
+	}
 }
 
 // New returns a new Interface which will exec ipset.
 func New(exec utilexec.Interface) Interface {
-	return &runner{
-		exec: exec,
-	}
+	return newInternal(exec, IPSetLockfilePath)
 }
 
 // cmdArgsBuilder builds the ipset command with mandatory arguments.
@@ -129,6 +149,12 @@ func (runner *runner) CreateSet(set *IPSet, ignoreExistErr bool) error {
 	if err != nil {
 		return fmt.Errorf("error creating set: %v, error: %v", set, err)
 	}
+
+	err = runner.locker.Lock()
+	if err != nil {
+		return err
+	}
+	defer runner.locker.Unlock()
 
 	return runner.createSet(set, ignoreExistErr)
 }
@@ -167,8 +193,14 @@ func (runner *runner) createSet(set *IPSet, ignoreExistErr bool) error {
 
 // DestroySet destroys the specified set name.
 func (runner *runner) DestroySet(setname string) error {
+	err := runner.locker.Lock()
+	if err != nil {
+		return err
+	}
+	defer runner.locker.Unlock()
+
 	cmdArgs := cmdArgsBuilder([]string{"destroy", setname})
-	_, err := runner.exec.
+	_, err = runner.exec.
 		Command(IPSetCmd, cmdArgs...).
 		CombinedOutput()
 
@@ -181,6 +213,12 @@ func (runner *runner) DestroySet(setname string) error {
 
 // ListSets list all set names from kernel.
 func (runner *runner) ListSets() ([]string, error) {
+	err := runner.locker.Lock()
+	if err != nil {
+		return nil, err
+	}
+	defer runner.locker.Unlock()
+
 	cmdArgs := cmdArgsBuilder([]string{"list", "-n"})
 	out, err := runner.exec.
 		Command(IPSetCmd, cmdArgs...).
@@ -207,6 +245,12 @@ func (runner *runner) ListSets() ([]string, error) {
 
 // ListSets list all set names from kernel.
 func (runner *runner) ListEntries(setname string) ([]IPSetEntry, error) {
+	err := runner.locker.Lock()
+	if err != nil {
+		return nil, err
+	}
+	defer runner.locker.Unlock()
+
 	cmdArgs := cmdArgsBuilder([]string{"list", setname})
 	out, err := runner.exec.
 		Command(IPSetCmd, cmdArgs...).
@@ -250,9 +294,15 @@ func (runner *runner) AddEntry(entry *IPSetEntry, setname string,
 		cmdArgs = append(cmdArgs, "-exist")
 	}
 
+	err := runner.locker.Lock()
+	if err != nil {
+		return err
+	}
+	defer runner.locker.Unlock()
+
 	cmdArgs = cmdArgsBuilder(cmdArgs)
 
-	_, err := runner.exec.
+	_, err = runner.exec.
 		Command(IPSetCmd, cmdArgs...).
 		CombinedOutput()
 
@@ -265,8 +315,14 @@ func (runner *runner) AddEntry(entry *IPSetEntry, setname string,
 
 // DelEntry deletes an entry from the specified set name.
 func (runner *runner) DelEntry(entryElement string, setname string) error {
+	err := runner.locker.Lock()
+	if err != nil {
+		return err
+	}
+	defer runner.locker.Unlock()
+
 	cmdArgs := cmdArgsBuilder([]string{"del", setname, entryElement})
-	_, err := runner.exec.
+	_, err = runner.exec.
 		Command(IPSetCmd, cmdArgs...).
 		CombinedOutput()
 
