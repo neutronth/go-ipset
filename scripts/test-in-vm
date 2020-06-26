@@ -1,0 +1,14 @@
+#!/bin/sh
+
+VAGRANT=$(which vagrant)
+
+if [ -z "$VAGRANT" ]; then
+  echo "vagrant is required, please install"
+  exit 1
+fi
+
+scripts/build-in-container
+
+cd testing
+vagrant up
+vagrant destroy -f

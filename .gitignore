@@ -1,0 +1,8 @@
+# lockfile created by testing
+ipset.lock
+
+# binary of go-ipset-test
+testing/bin
+
+# vagrant related files
+testing/.vagrant
