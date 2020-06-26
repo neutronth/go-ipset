@@ -19,7 +19,5 @@ before_script:
   - sudo apt-get install -y ipset
 
 script:
-  - go test -v ./...
-  - go build -o testing/bin/go-ipset-test testing/main.go
-  - chmod +x testing/bin/go-ipset-test
+  - make
   - sudo testing/bin/go-ipset-test
