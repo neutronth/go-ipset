@@ -11,6 +11,9 @@ type Type string
 const (
 	// HashIP represents the `hash:ip` type ipset.
 	HashIP Type = "hash:ip"
+
+	// HashNet represents the `hash:net` type ipset.
+	HashNet Type = "hash:net"
 )
 
 const (
@@ -23,4 +26,5 @@ const (
 // ValidIPSetTypes defines the supported ip set type.
 var ValidIPSetTypes = []Type{
 	HashIP,
+	HashNet,
 }

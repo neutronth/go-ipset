@@ -40,7 +40,7 @@ type IPSet struct {
 
 // Validate checks if a given ipset is valid or not.
 func (set *IPSet) Validate() error {
-	if set.SetType == HashIP {
+	if set.SetType == HashIP || set.SetType == HashNet {
 		if !set.validateHashFamily() {
 			return fmt.Errorf("invalid Hash Family")
 		}
@@ -163,7 +163,7 @@ func (runner *runner) CreateSet(set *IPSet, ignoreExistErr bool) error {
 func (runner *runner) createSet(set *IPSet, ignoreExistErr bool) error {
 	cmdArgs := []string{"create", set.Name, string(set.SetType)}
 
-	if set.SetType == HashIP {
+	if set.SetType == HashIP || set.SetType == HashNet {
 		cmdArgs = append(cmdArgs,
 			"family", set.HashFamily,
 			"hashsize", strconv.Itoa(set.HashSize),
